@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnostic Gratuit — Virgule</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --blue: #2B7A94;
+  --blue-mid: #3d8fa9;
+  --blue-light: #5baac4;
+  --green: #5B8A6F;
+  --green-light: #7CAF8E;
+  --dark: #0f1e24;
+  --dark-2: #172029;
+  --dark-3: #1e2d35;
+  --text: #e8f0f4;
+  --muted: #6b8898;
+  --muted-light: #8da4b0;
+  --border: rgba(255,255,255,0.08);
+  --border-hover: rgba(91,170,196,0.35);
+  --red: #c0614a;
+  --orange: #c49a3c;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--dark); color: var(--text);
+  font-family: 'DM Sans', sans-serif; min-height: 100vh; overflow-x: hidden;
+}
+.bg-mesh {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 55% at 15% -10%, rgba(43,122,148,0.22) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 45% at 90% 110%, rgba(91,138,111,0.16) 0%, transparent 50%);
+}
+.bg-grid {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.03;
+  background-image: linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+.page { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 0 20px 80px; }
+header { width: 100%; max-width: 780px; display: flex; align-items: center; justify-content: space-between; padding: 28px 0 0; }
+.logo { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; letter-spacing: -0.03em; }
+.logo-dot { color: var(--blue-light); }
+.nav-tag { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--border); border-radius: 100px; padding: 5px 12px; }
+.hero { width: 100%; max-width: 680px; text-align: center; margin: 56px 0 44px; }
+.hero-eyebrow { display: inline-flex; align-items: center; gap: 7px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--blue-light); margin-bottom: 22px; background: rgba(43,122,148,0.12); border: 1px solid rgba(91,170,196,0.25); border-radius: 100px; padding: 6px 14px; }
+.dot-pulse { width: 6px; height: 6px; border-radius: 50%; background: var(--green-light); animation: dotPulse 2s ease-in-out infinite; }
+@keyframes dotPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+.hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(2.1rem, 5.5vw, 3.4rem); font-weight: 700; line-height: 1.12; letter-spacing: -0.04em; margin-bottom: 18px; }
+.hero h1 em { font-style: italic; color: var(--blue-light); }
+.hero p { font-size: 1rem; color: var(--muted-light); line-height: 1.7; max-width: 460px; margin: 0 auto; font-weight: 300; }
+.card { width: 100%; max-width: 680px; background: rgba(30,45,53,0.7); border: 1px solid var(--border); border-radius: 24px; padding: 44px; backdrop-filter: blur(16px); box-shadow: 0 24px 80px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04) inset; }
+#step-url,#step-email,#step-loading,#step-results { display: none; }
+#step-url { display: block; }
+.steps-indicator { display: flex; align-items: center; justify-content: center; margin-bottom: 36px; }
+.step-pip-wrap { display: flex; flex-direction: column; align-items: center; }
+.pip-circle { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 600; color: var(--muted); transition: all 0.3s; }
+.pip-circle.active { border-color: var(--blue-light); color: var(--blue-light); background: rgba(91,170,196,0.1); }
+.pip-circle.done { border-color: var(--green); background: var(--green); color: white; }
+.pip-label { font-size: 0.68rem; color: var(--muted); margin-top: 4px; letter-spacing: 0.05em; }
+.pip-line { width: 48px; height: 1px; background: var(--border); margin: 0 8px 16px; }
+.field-label { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; display: block; }
+.input-row { display: flex; gap: 10px; }
+.text-input { flex: 1; background: rgba(255,255,255,0.05); border: 1.5px solid var(--border); border-radius: 12px; padding: 14px 18px; font-size: 0.95rem; font-family: 'DM Sans', sans-serif; color: var(--text); outline: none; transition: border-color 0.2s, background 0.2s; }
+.text-input::placeholder { color: rgba(107,136,152,0.55); }
+.text-input:focus { border-color: var(--blue-light); background: rgba(43,122,148,0.08); }
+.text-input.has-error { border-color: var(--red) !important; }
+.btn { border: none; border-radius: 12px; padding: 14px 26px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: all 0.2s; }
+.btn:active { transform: scale(0.98); }
+.btn-blue { background: var(--blue); color: white; }
+.btn-blue:hover { background: var(--blue-mid); }
+.btn-full { width: 100%; justify-content: center; padding: 16px; font-size: 1rem; }
+.error-hint { color: #e07a5f; font-size: 0.8rem; margin-top: 8px; display: none; }
+.trust { display: flex; align-items: center; justify-content: center; gap: 22px; margin-top: 22px; flex-wrap: wrap; }
+.trust-item { font-size: 0.75rem; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+.email-context { background: rgba(43,122,148,0.08); border: 1px solid rgba(91,170,196,0.2); border-radius: 12px; padding: 16px 18px; margin-bottom: 28px; display: flex; align-items: center; gap: 12px; }
+.email-context-icon { font-size: 1.4rem; flex-shrink: 0; }
+.email-context-text { font-size: 0.85rem; color: var(--muted-light); line-height: 1.5; }
+.email-context-text strong { color: var(--text); font-weight: 600; }
+.step-title { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; margin-bottom: 8px; }
+.step-sub { font-size: 0.88rem; color: var(--muted-light); margin-bottom: 26px; line-height: 1.6; }
+.loading-center { text-align: center; padding: 16px 0; }
+.loader-ring { position: relative; width: 80px; height: 80px; margin: 0 auto 32px; }
+.loader-ring svg { animation: spin 1.2s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loader-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 1.6rem; }
+.loading-title { font-family: 'Playfair Display', serif; font-size: 1.3rem; margin-bottom: 8px; }
+.loading-url { font-size: 0.8rem; color: var(--muted); margin-bottom: 32px; word-break: break-all; }
+.progress-list { display: flex; flex-direction: column; gap: 9px; max-width: 340px; margin: 0 auto; text-align: left; }
+.prog-item { display: flex; align-items: center; gap: 10px; font-size: 0.84rem; color: var(--muted); transition: color 0.3s; }
+.prog-item.active { color: var(--text); font-weight: 500; }
+.prog-item.done { color: var(--green-light); }
+.prog-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(107,136,152,0.3); flex-shrink: 0; transition: background 0.3s; }
+.prog-item.active .prog-dot { background: var(--blue-light); animation: dotPulse 1s infinite; }
+.prog-item.done .prog-dot { background: var(--green-light); }
+
+/* ── RESULTS ── */
+.section-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+.divider { height: 1px; background: var(--border); margin: 28px 0; }
+.source-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 0.7rem; color: var(--muted); background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 100px; padding: 4px 10px; margin-bottom: 20px; }
+
+/* ── SUMMARY HERO (bloc émotionnel) ── */
+.summary-hero {
+  text-align: center;
+  padding: 12px 0 8px;
+}
+.summary-score-ring { position: relative; width: 140px; height: 140px; margin: 0 auto 20px; }
+.summary-score-ring svg { transform: rotate(-90deg); }
+.summary-score-inner { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
+.summary-score-num { font-family: 'Playfair Display', serif; font-size: 2.6rem; font-weight: 700; line-height: 1; }
+.summary-score-den { font-size: 0.7rem; color: var(--muted); }
+.summary-headline {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.25rem, 3.5vw, 1.6rem);
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 10px;
+}
+.summary-sub {
+  font-size: 0.9rem;
+  color: var(--muted-light);
+  line-height: 1.6;
+  max-width: 480px;
+  margin: 0 auto 20px;
+}
+.summary-score-message {
+  margin-top: 12px;
+  margin-bottom: 20px;
+  text-align: center;
+  color: rgba(255,255,255,0.8);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.emotion-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 100px;
+  padding: 5px 13px;
+  margin-bottom: 24px;
+}
+.emotion-tag.urgent { background: rgba(192,97,74,0.15); color: #e07a5f; border: 1px solid rgba(192,97,74,0.3); }
+.emotion-tag.concern { background: rgba(196,154,60,0.12); color: #d4a843; border: 1px solid rgba(196,154,60,0.3); }
+.emotion-tag.opportunity { background: rgba(43,122,148,0.12); color: var(--blue-light); border: 1px solid rgba(91,170,196,0.25); }
+.emotion-tag.positive { background: rgba(91,138,111,0.12); color: var(--green-light); border: 1px solid rgba(91,138,111,0.3); }
+
+/* ── CRITICAL POINTS ── */
+.critical-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+.critical-item {
+  display: flex; gap: 14px; align-items: flex-start;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 18px;
+  transition: border-color 0.2s;
+}
+.critical-item:hover { border-color: var(--border-hover); }
+.critical-item.severity-critical { border-left: 3px solid var(--red); }
+.critical-item.severity-warning { border-left: 3px solid var(--orange); }
+.critical-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
+.critical-body { flex: 1; }
+.critical-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 3px; }
+.critical-detail { font-size: 0.78rem; color: var(--muted); margin-bottom: 5px; }
+.critical-impact { font-size: 0.8rem; color: var(--muted-light); line-height: 1.5; }
+.critical-lost { display: inline-block; font-size: 0.72rem; font-weight: 600; color: #e07a5f; background: rgba(192,97,74,0.1); border-radius: 6px; padding: 2px 8px; margin-top: 6px; }
+.severity-badge { flex-shrink: 0; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; border-radius: 6px; padding: 3px 7px; align-self: flex-start; margin-top: 2px; }
+.severity-badge.critical { background: rgba(192,97,74,0.18); color: #e07a5f; }
+.severity-badge.warning  { background: rgba(196,154,60,0.18); color: #d4a843; }
+
+/* ── BUSINESS SCORES ── */
+.business-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 28px; }
+.biz-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 16px;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+.biz-card:hover { border-color: var(--border-hover); }
+.biz-icon { font-size: 1.3rem; margin-bottom: 10px; }
+.biz-name { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.biz-score { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+.biz-label { font-size: 0.7rem; font-weight: 600; margin-bottom: 8px; }
+.biz-track { height: 3px; background: rgba(255,255,255,0.07); border-radius: 2px; overflow: hidden; margin-bottom: 10px; }
+.biz-fill { height: 100%; border-radius: 2px; width: 0%; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
+.biz-headline { font-size: 0.75rem; color: var(--muted-light); line-height: 1.45; margin-bottom: 8px; }
+.biz-impact { font-size: 0.73rem; color: var(--muted); line-height: 1.5; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px; }
+
+/* ── GOOGLE SCORES ── */
+.google-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 28px; }
+.crit-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 14px; padding: 16px; transition: border-color 0.2s; }
+.crit-card:hover { border-color: var(--border-hover); }
+.crit-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.crit-name { display: flex; align-items: center; gap: 7px; font-size: 0.82rem; font-weight: 600; }
+.crit-score-val { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; }
+.crit-track { height: 3px; background: rgba(255,255,255,0.07); border-radius: 2px; overflow: hidden; margin-bottom: 8px; }
+.crit-fill { height: 100%; border-radius: 2px; width: 0%; transition: width 1.1s cubic-bezier(0.4,0,0.2,1); }
+.crit-sub { font-size: 0.73rem; color: var(--muted); }
+
+#mobile-desktop-gap{
+  margin-top:12px;
+  padding:12px;
+  border-radius:10px;
+  background:rgba(196,154,60,0.12);
+  border:1px solid rgba(196,154,60,0.25);
+  color:#d4a843;
+  font-size:0.85rem;
+  text-align:center;
+}
+
+/* ── SCREENSHOTS ── */
+.screenshots-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 28px; }
+.screenshot-wrap { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: rgba(255,255,255,0.02); }
+.screenshot-label { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 5px; }
+.screenshot-img { width: 100%; max-height: 220px; object-fit: cover; object-position: top; display: block; }
+.screenshot-placeholder { height: 100px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; color: var(--muted); }
+
+/* ── CTA BOX ── */
+.cta-box { background: linear-gradient(135deg, rgba(43,122,148,0.18) 0%, rgba(91,138,111,0.12) 100%); border: 1px solid rgba(91,170,196,0.25); border-radius: 18px; padding: 30px; text-align: center; }
+.cta-box h3 { font-family: 'Playfair Display', serif; font-size: 1.25rem; margin-bottom: 8px; }
+.cta-box p { font-size: 0.85rem; color: var(--muted-light); margin-bottom: 22px; line-height: 1.6; }
+.btn-cta { display: inline-flex; align-items: center; gap: 8px; background: var(--green); color: white; text-decoration: none; border-radius: 12px; padding: 14px 28px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 600; transition: all 0.2s; }
+.btn-cta:hover { background: var(--green-light); transform: translateY(-1px); }
+
+.toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--green); color: white; border-radius: 12px; padding: 12px 22px; font-size: 0.88rem; font-weight: 500; z-index: 999; transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1); white-space: nowrap; pointer-events: none; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* color helpers */
+.c-green { color: var(--green-light); }
+.c-orange { color: var(--orange); }
+.c-red { color: var(--red); }
+
+@media (max-width: 540px) {
+  .card { padding: 28px 20px; }
+  .input-row { flex-direction: column; }
+  .business-grid { grid-template-columns: 1fr; }
+  .google-grid { grid-template-columns: 1fr; }
+  .screenshots-row { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 1.9rem; }
+  .pip-line { width: 28px; }
+}
+</style>
+</head>
+<body>
+<div class="bg-mesh"></div>
+<div class="bg-grid"></div>
+<div class="page">
+  <header>
+    <div class="logo">Virgule<span class="logo-dot">.</span></div>
+    <span class="nav-tag">Diagnostic gratuit</span>
+  </header>
+
+  <div class="hero">
+    <div class="hero-eyebrow"><div class="dot-pulse"></div>Outil gratuit · Sans engagement</div>
+    <h1>Ce que votre site<br><em>coûte vraiment</em></h1>
+    <p>Diagnostic en 30 secondes — traduit en impact business, pas en jargon technique.</p>
+  </div>
+
+  <div class="card">
+
+    <!-- ═══ STEP 1 : URL ═══ -->
+    <div id="step-url">
+      <div class="steps-indicator">
+        <div class="step-pip-wrap"><div class="pip-circle active" id="p1">1</div><div class="pip-label">URL</div></div>
+        <div class="pip-line"></div>
+        <div class="step-pip-wrap"><div class="pip-circle" id="p2">2</div><div class="pip-label">Email</div></div>
+        <div class="pip-line"></div>
+        <div class="step-pip-wrap"><div class="pip-circle" id="p3">3</div><div class="pip-label">Résultats</div></div>
+      </div>
+      <label class="field-label">Adresse de votre site web</label>
+      <div class="input-row">
+        <input type="url" id="url-input" class="text-input" placeholder="https://votre-site.com"/>
+        <button class="btn btn-blue" onclick="goToEmail()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Analyser
+        </button>
+      </div>
+      <p class="error-hint" id="url-error">Merci d'entrer une URL valide (ex: https://monsite.com)</p>
+      <div class="trust">
+        <span class="trust-item">🔒 Gratuit & sans engagement</span>
+        <span class="trust-item">⚡ Résultats en 30 sec</span>
+        <span class="trust-item">📊 Données Google PageSpeed</span>
+      </div>
+    </div>
+
+    <!-- ═══ STEP 2 : EMAIL ═══ -->
+    <div id="step-email">
+      <div class="steps-indicator">
+        <div class="step-pip-wrap"><div class="pip-circle done">✓</div><div class="pip-label">URL</div></div>
+        <div class="pip-line"></div>
+        <div class="step-pip-wrap"><div class="pip-circle active">2</div><div class="pip-label">Email</div></div>
+        <div class="pip-line"></div>
+        <div class="step-pip-wrap"><div class="pip-circle">3</div><div class="pip-label">Résultats</div></div>
+      </div>
+      <div class="email-context">
+        <div class="email-context-icon">🔍</div>
+        <div class="email-context-text">Prêt à analyser <strong id="url-preview"></strong> — entrez votre email pour recevoir vos résultats.</div>
+      </div>
+      <p class="step-title">Où envoyer votre diagnostic ?</p>
+      <p class="step-sub">Votre rapport sera lié à cette adresse. Aucun spam, promis.</p>
+      <input type="email" id="email-input" class="text-input" style="width:100%;margin-bottom:12px" placeholder="vous@email.com"/>
+      <p class="error-hint" id="email-error">Adresse email invalide</p>
+      <button class="btn btn-blue btn-full" style="margin-top:4px" onclick="startAnalysis()">
+        Lancer l'analyse
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+      <p style="text-align:center;font-size:0.73rem;color:var(--muted);margin-top:12px">🔒 Aucun spam. Données non revendues.</p>
+    </div>
+
+    <!-- ═══ STEP 3 : LOADING ═══ -->
+    <div id="step-loading" class="loading-center">
+      <div class="loader-ring">
+        <svg width="80" height="80" viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(43,122,148,0.12)" stroke-width="6"/>
+          <circle cx="40" cy="40" r="34" fill="none" stroke="var(--blue-light)" stroke-width="6" stroke-dasharray="30 184" stroke-linecap="round"/>
+        </svg>
+        <div class="loader-icon">🔍</div>
+      </div>
+      <p class="loading-title">Analyse en cours…</p>
+      <p class="loading-url" id="loading-url-text"></p>
+      <div class="progress-list">
+        <div class="prog-item"><div class="prog-dot"></div>Connexion au site</div>
+        <div class="prog-item"><div class="prog-dot"></div>Analyse des performances</div>
+        <div class="prog-item"><div class="prog-dot"></div>Vérification mobile & responsive</div>
+        <div class="prog-item"><div class="prog-dot"></div>Audit SEO & accessibilité</div>
+        <div class="prog-item"><div class="prog-dot"></div>Génération du rapport business</div>
+      </div>
+    </div>
+
+    <!-- ═══ STEP 4 : RESULTS ═══ -->
+    <div id="step-results">
+      <div class="steps-indicator">
+        <div class="step-pip-wrap"><div class="pip-circle done">✓</div><div class="pip-label">URL</div></div>
+        <div class="pip-line"></div>
+        <div class="step-pip-wrap"><div class="pip-circle done">✓</div><div class="pip-label">Email</div></div>
+        <div class="pip-line"></div>
+        <div class="step-pip-wrap"><div class="pip-circle active">3</div><div class="pip-label">Résultats</div></div>
+      </div>
+
+      <!-- 1. SYNTHÈSE ÉMOTIONNELLE -->
+      <div class="summary-hero" id="summary-hero">
+        <div class="source-badge">📊 Données Google PageSpeed Insights · Mobile</div>
+        <div class="summary-score-ring">
+          <svg width="140" height="140" viewBox="0 0 140 140">
+            <circle cx="70" cy="70" r="60" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="9"/>
+            <circle id="summary-arc" cx="70" cy="70" r="60" fill="none" stroke="var(--blue-light)" stroke-width="9"
+              stroke-dasharray="376.9" stroke-dashoffset="376.9" stroke-linecap="round"
+              style="transition: stroke-dashoffset 1.3s cubic-bezier(0.4,0,0.2,1), stroke 0.6s ease"/>
+          </svg>
+          <div class="summary-score-inner">
+            <div class="summary-score-num" id="summary-score-num">—</div>
+            <div class="summary-score-den">/100</div>
+          </div>
+        </div>
+<p id="summary-score-message" class="summary-score-message"></p>
+        <div id="emotion-tag-wrap"></div>
+        <p class="summary-headline" id="summary-headline"></p>
+        <p class="summary-sub" id="summary-sub"></p>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- 2. POINTS CRITIQUES -->
+      <p class="section-label" id="critical-label"></p>
+      <div class="critical-list" id="critical-list"></div>
+
+      <div class="divider"></div>
+
+      <!-- 3. SCORES BUSINESS -->
+      <p class="section-label">Impact sur votre activité</p>
+      <div class="business-grid" id="business-grid"></div>
+
+      <div class="divider"></div>
+
+      <!-- 4. CAPTURES D'ÉCRAN -->
+      <div id="screenshots-section" style="display:none">
+        <p class="section-label">Aperçu de votre site</p>
+        <div class="screenshots-row" id="screenshots-row"></div>
+        <div class="divider"></div>
+      </div>
+
+      <!-- 5. SCORES GOOGLE (crédibilité) -->
+      <p class="section-label">Scores Google (données sources)</p>
+<div id="mobile-desktop-gap"></div>
+      <div class="google-grid" id="google-grid"></div>
+<div id="mobile-desktop-gap"></div>
+
+      <div class="divider"></div>
+
+      <!-- 6. CTA -->
+      <div class="cta-box">
+        <h3>Transformons ce diagnostic en actions</h3>
+        <p>30 minutes ensemble pour décider quoi corriger en priorité — sans jargon, sans engagement.</p>
+       <a href="#" id="calendly-link" target="_blank" class="btn-cta">📅 Réserver un appel gratuit</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const CALENDLY_URL =
+  "https://calendly.com/vsc-virgule/nouvelle-reunion";
+
+let state = { url: "", email: "", data: null };
+
+function norm(u) { u=u.trim(); if(!/^https?:\/\//i.test(u)) u="https://"+u; return u; }
+function validUrl(u) { try { new URL(u); return u.includes("."); } catch { return false; } }
+function validEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e); }
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function show(id) {
+  ["step-url","step-email","step-loading","step-results"].forEach(s => {
+    document.getElementById(s).style.display = (s === id) ? "block" : "none";
+  });
+}
+
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 3200);
+}
+
+// STEP 1 → 2
+function goToEmail() {
+  const url = norm(document.getElementById("url-input").value);
+  const err = document.getElementById("url-error");
+  if (!validUrl(url)) { err.style.display = "block"; return; }
+  err.style.display = "none";
+  state.url = url;
+  document.getElementById("url-preview").textContent = url.replace(/^https?:\/\//,"").replace(/\/$/,"");
+  show("step-email");
+}
+
+// ── Helper : un appel à la function Netlify ─────────────────
+async function callPageSpeed(url, email, timeoutMs = 27000) {
+  const controller = new AbortController();
+  const tid = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const resp = await fetch("/.netlify/functions/pagespeed", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url, email }),
+      signal: controller.signal,
+    });
+    clearTimeout(tid);
+    const json = await resp.json();
+    return { data: json, httpStatus: resp.status };
+  } catch (e) {
+    clearTimeout(tid);
+    return e.name === "AbortError"
+      ? { data: null, isAbortError: true }
+      : { data: null, isNetworkError: true };
+  }
+}
+
+// STEP 2 → 3 → 4
+async function startAnalysis() {
+  const email = document.getElementById("email-input").value.trim();
+  if (!validEmail(email)) {
+    document.getElementById("email-input").classList.add("has-error");
+    document.getElementById("email-error").style.display = "block";
+    return;
+  }
+  state.email = email;
+  show("step-loading");
+  document.getElementById("loading-url-text").textContent = state.url;
+
+  const progs = document.querySelectorAll(".prog-item");
+  const animateSteps = async () => {
+    for (let i = 0; i < progs.length - 1; i++) {
+      await delay(380);
+      if (i > 0) { progs[i-1].classList.remove("active"); progs[i-1].classList.add("done"); }
+      progs[i].classList.add("active");
+    }
+  };
+  animateSteps();
+
+  // ── 1er appel ──────────────────────────────────────────────
+  let { data, httpStatus, isAbortError } = await callPageSpeed(state.url, state.email);
+
+  // ── Auto-retry si timeout (cache Google chaud au 2e coup) ──
+  const isTimeout = isAbortError || data?.code === "ANALYSIS_TIMEOUT";
+  if (isTimeout) {
+    const loadTitle = document.querySelector(".loading-title");
+    if (loadTitle) loadTitle.textContent = "Site lent — nouvelle tentative…";
+    await delay(1500);
+    ({ data, httpStatus, isAbortError } = await callPageSpeed(state.url, state.email));
+  }
+
+  progs.forEach(p => p.classList.remove("active"));
+  progs[progs.length - 1].classList.add("done");
+  await delay(250);
+
+  // ── Helpers d'affichage d'erreur ───────────────────────────
+  function showUrlError(msg) {
+    show("step-url");
+    progs.forEach(p => p.classList.remove("active","done"));
+    const e = document.getElementById("url-error");
+    e.textContent = msg;
+    e.style.display = "block";
+  }
+
+  // ── URL invalide (format incorrect) ────────────────────────
+  if (data?.code === "INVALID_URL") {
+    showUrlError("Cette URL ne semble pas valide. Vérifiez qu'elle commence bien par https:// et que le nom de domaine est correct.");
+    return;
+  }
+
+  // ── Site inaccessible ou introuvable ───────────────────────
+  if (httpStatus === 422 || data?.code === "URL_UNREACHABLE") {
+    showUrlError("Ce site est introuvable ou inaccessible. Il est peut-être hors ligne, protégé, ou le domaine n'existe pas.");
+    return;
+  }
+
+  // ── Timeout persistant même après retry ───────────────────
+  if (isAbortError || data?.code === "ANALYSIS_TIMEOUT") {
+    showUrlError("⏱ Ce site est trop lourd pour être analysé dans le délai imparti. Essayez avec l'URL de la page d'accueil, ou réessayez dans quelques instants.");
+    return;
+  }
+
+  // ── Erreur générique serveur ───────────────────────────────
+  if (!data || data.error) {
+    showUrlError("Une erreur est survenue lors de l'analyse. Vérifiez que le site est accessible publiquement et réessayez.");
+    return;
+  }
+
+  state.data = data;
+  renderResults(data);
+  show("step-results");
+
+  // Score global pour Brevo
+  const globalScore = data.summary?.globalScore ?? data.googleScores?.performance?.score ?? 0;
+  sendBrevo(email, state.url, globalScore);
+  toast("✅ Diagnostic terminé !");
+}
+
+// ── HELPERS ──
+function scoreColor(s) {
+  return s >= 80 ? "#7CAF8E" : s >= 60 ? "#c49a3c" : "#c0614a";
+}
+function colorFromKey(key) {
+  if (key === "green") return "#7CAF8E";
+  if (key === "orange") return "#c49a3c";
+  return "#c0614a";
+}
+
+// ── RENDER (new v2 structure) ──
+function renderResults(d) {
+  const summary       = d.summary       || {};
+  const criticalPoints = d.criticalPoints || [];
+  const businessScores = d.businessScores || {};
+  const googleScores   = d.googleScores   || {};
+  const screenshots    = d.screenshots    || {};
+const mobilePerf = d.googleScores?.performance?.score;
+const desktopPerf = d.desktopScores?.performance;
+
+if (mobilePerf && desktopPerf) {
+
+  const gap = Math.abs(mobilePerf - desktopPerf);
+
+  if (gap > 15) {
+
+    document.getElementById("mobile-desktop-gap").innerHTML =
+      `⚠️ Écart important : ${gap} points entre mobile et desktop. Les visiteurs sur téléphone n'ont probablement pas la même expérience que sur ordinateur.`;
+
+  } else {
+
+    document.getElementById("mobile-desktop-gap").innerHTML = "";
+  }
+}
+
+  // ── 1. Summary Hero ──
+  const globalScore = summary.globalScore ?? 0;
+  const col = scoreColor(globalScore);
+  const arc = document.getElementById("summary-arc");
+  arc.style.stroke = col;
+  document.getElementById("summary-score-num").textContent = globalScore;
+let interpretation;
+
+if (globalScore >= 85) {
+  interpretation = "Excellent niveau d'optimisation et de conversion.";
+} else if (globalScore >= 70) {
+  interpretation = "Bon niveau global avec quelques améliorations possibles.";
+} else if (globalScore >= 50) {
+  interpretation = "Plusieurs points limitent probablement les conversions.";
+} else {
+  interpretation = "Niveau insuffisant pour convertir efficacement.";
+}
+
+document.getElementById("summary-score-message").textContent = interpretation;
+  document.getElementById("summary-score-num").style.color = col;
+  setTimeout(() => { arc.style.strokeDashoffset = 376.9 - (globalScore / 100) * 376.9; }, 80);
+
+  // Emotion tag
+  const emotionMap = {
+    urgent:      { emoji: "🔴", label: "Action urgente requise" },
+    concern:     { emoji: "🟠", label: "Points critiques détectés" },
+    opportunity: { emoji: "🟡", label: "Des gains faciles existent" },
+    positive:    { emoji: "🟢", label: "Site bien positionné" },
+  };
+  const em = emotionMap[summary.emotion] || emotionMap.concern;
+  document.getElementById("emotion-tag-wrap").innerHTML =
+    `<div class="emotion-tag ${summary.emotion || 'concern'}">${em.emoji} ${em.label}</div>`;
+  document.getElementById("summary-headline").textContent = summary.headline || "";
+  document.getElementById("summary-sub").textContent = summary.subheadline || "";
+
+  // ── 2. Points critiques ──
+  const critCount = criticalPoints.length;
+  document.getElementById("critical-label").textContent =
+    critCount === 0 ? "Aucun problème majeur détecté 🎉"
+    : `${critCount} point${critCount > 1 ? "s" : ""} à corriger en priorité`;
+
+  const cList = document.getElementById("critical-list");
+  cList.innerHTML = "";
+  if (criticalPoints.length === 0) {
+    cList.innerHTML = `<div style="font-size:0.85rem;color:var(--muted-light);padding:12px 0">Votre site ne présente pas de problèmes critiques évidents. Concentrez-vous sur les optimisations ci-dessous.</div>`;
+  } else {
+    criticalPoints.forEach(pt => {
+      const div = document.createElement("div");
+      div.className = `critical-item severity-${pt.severity}`;
+      div.innerHTML = `
+        <div class="critical-icon">${pt.icon}</div>
+        <div class="critical-body">
+          <div class="critical-title">${pt.title}</div>
+          <div class="critical-detail">${pt.detail}</div>
+          <div class="critical-impact">${pt.businessImpact}</div>
+          ${pt.lostOpportunity ? `<span class="critical-lost">⚠ ${pt.lostOpportunity}</span>` : ""}
+        </div>
+        <div class="severity-badge ${pt.severity}">${pt.severity === "critical" ? "Critique" : "Avertissement"}</div>`;
+      cList.appendChild(div);
+    });
+  }
+
+  // ── 3. Business scores ──
+  const bizDefs = [
+    { key: "design",      icon: "🎨", label: "Design" },
+    { key: "conversion",  icon: "🎯", label: "Conversion" },
+    { key: "credibility", icon: "🔒", label: "Crédibilité" },
+  ];
+  const bGrid = document.getElementById("business-grid");
+  bGrid.innerHTML = "";
+  bizDefs.forEach(def => {
+    const bs = businessScores[def.key] || {};
+    const score = bs.score ?? 0;
+    const col = colorFromKey(bs.color);
+    const div = document.createElement("div");
+    div.className = "biz-card";
+    div.innerHTML = `
+      <div class="biz-icon">${def.icon}</div>
+      <div class="biz-name">${def.label}</div>
+      <div class="biz-score" style="color:${col}">${score}</div>
+      <div class="biz-label" style="color:${col}">${bs.label || ""}</div>
+      <div class="biz-track"><div class="biz-fill" style="background:${col}"></div></div>
+      <div class="biz-headline">${bs.headline || ""}</div>
+      ${bs.businessImpact ? `<div class="biz-impact">${bs.businessImpact}</div>` : ""}`;
+    bGrid.appendChild(div);
+    setTimeout(() => div.querySelector(".biz-fill").style.width = score + "%", 150);
+  });
+
+  // ── 4. Screenshots ──
+  const hasScreenshots = screenshots.mobile || screenshots.desktop;
+  if (hasScreenshots) {
+    document.getElementById("screenshots-section").style.display = "block";
+    const sRow = document.getElementById("screenshots-row");
+    sRow.innerHTML = "";
+    [
+      { key: "mobile",  label: "📱 Mobile",  src: screenshots.mobile },
+      { key: "desktop", label: "🖥 Desktop", src: screenshots.desktop },
+    ].forEach(s => {
+      const div = document.createElement("div");
+      div.className = "screenshot-wrap";
+      if (s.src) {
+        div.innerHTML = `
+          <div class="screenshot-label">${s.label}</div>
+          <img class="screenshot-img" src="${s.src}" alt="Aperçu ${s.key}" loading="lazy"/>`;
+      } else {
+        div.innerHTML = `
+          <div class="screenshot-label">${s.label}</div>
+          <div class="screenshot-placeholder">Aperçu indisponible</div>`;
+      }
+      sRow.appendChild(div);
+    });
+  }
+
+  // ── 5. Google scores ──
+  const googleDefs = [
+    { key: "performance",   icon: "⚡", label: "Performance",       sub: () => {
+        const m = d.rawMetrics?.mobile;
+        const fcp = m?.fcp ? (m.fcp/1000).toFixed(1)+"s" : "—";
+        const lcp = m?.lcp ? (m.lcp/1000).toFixed(1)+"s" : "—";
+        return `FCP ${fcp} · LCP ${lcp}`;
+      }
+    },
+    { key: "seo",           icon: "🔍", label: "SEO",               sub: () => "Visibilité Google" },
+    { key: "accessibility", icon: "♿",  label: "Accessibilité",     sub: () => "Compatibilité tous publics" },
+    { key: "bestPractices", icon: "🛡️", label: "Bonnes pratiques",  sub: () => {
+        const cls = d.rawMetrics?.mobile?.cls;
+        return cls !== null && cls !== undefined ? `CLS ${cls.toFixed ? cls.toFixed(3) : cls}` : "Standards web";
+      }
+    },
+  ];
+  const gGrid = document.getElementById("google-grid");
+  gGrid.innerHTML = "";
+  googleDefs.forEach(def => {
+    const gs = googleScores[def.key] || {};
+    const score = gs.score ?? 0;
+    const col = colorFromKey(gs.color);
+    const div = document.createElement("div");
+    div.className = "crit-card";
+    div.innerHTML = `
+      <div class="crit-top">
+        <div class="crit-name"><span>${def.icon}</span>${def.label}</div>
+        <div class="crit-score-val" style="color:${col}">${score}</div>
+      </div>
+      <div class="crit-track"><div class="crit-fill" style="background:${col}"></div></div>
+      <div class="crit-sub">${def.sub()}</div>`;
+    gGrid.appendChild(div);
+    setTimeout(() => div.querySelector(".crit-fill").style.width = score + "%", 200);
+  });
+}
+
+// Brevo via Function
+async function sendBrevo(email, url, score) {
+  try {
+    await fetch("/.netlify/functions/brevo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, url, score })
+    });
+  } catch(e) { console.warn("Brevo:", e); }
+}
+
+// Keyboard
+document.getElementById("url-input").addEventListener("keypress", e => { if(e.key==="Enter") goToEmail(); });
+document.getElementById("email-input").addEventListener("keypress", e => { if(e.key==="Enter") startAnalysis(); });
+document.getElementById("email-input").addEventListener("input", () => {
+  document.getElementById("email-input").classList.remove("has-error");
+  document.getElementById("email-error").style.display = "none";
+});
+document
+  .getElementById("calendly-link")
+  .setAttribute("href", CALENDLY_URL);
+</script>
+</body>
+</html>

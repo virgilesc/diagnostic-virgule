@@ -1,0 +1,13 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+  environment = { SECRETS_SCAN_OMIT_KEYS = "BREVO_KEY" }
+
+[functions."pagespeed"]
+  # timeout = 60  # Nécessite Netlify Pro — désactivé (plan Free = 26s max)
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
