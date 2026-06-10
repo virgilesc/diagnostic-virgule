@@ -8,40 +8,9 @@
 // ── Constantes ───────────────────────────────────────────────
 const PSI_ENDPOINT = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed";
 const API_KEY = process.env.PAGESPEED_API_KEY;
-// Netlify Free/Starter = 26s max (limite plateforme, non configurable).
-// On cible 22s — marge pour le runtime Netlify + réseau.
-const TIMEOUT_MS = 22000;
-
-// Champs PSI retournés — limiter réduit fortement le temps de réponse Google
-// sur les sites lourds (évite de télécharger screenshots + audits complets inutiles).
-const PSI_FIELDS = [
-  "lighthouseResult/categories",
-  "lighthouseResult/audits/first-contentful-paint",
-  "lighthouseResult/audits/largest-contentful-paint",
-  "lighthouseResult/audits/total-blocking-time",
-  "lighthouseResult/audits/cumulative-layout-shift",
-  "lighthouseResult/audits/speed-index",
-  "lighthouseResult/audits/interactive",
-  "lighthouseResult/audits/is-on-https",
-  "lighthouseResult/audits/viewport",
-  "lighthouseResult/audits/uses-optimized-images",
-  "lighthouseResult/audits/render-blocking-resources",
-  "lighthouseResult/audits/font-display",
-  "lighthouseResult/audits/aria-required-attr",
-  "lighthouseResult/audits/tap-targets",
-  "lighthouseResult/audits/legacy-javascript",
-  "lighthouseResult/audits/unused-css-rules",
-  "lighthouseResult/audits/unused-javascript",
-  "lighthouseResult/audits/document-title",
-  "lighthouseResult/audits/meta-description",
-  "lighthouseResult/audits/hreflang",
-  "lighthouseResult/audits/canonical",
-  "lighthouseResult/audits/link-text",
-  "lighthouseResult/audits/robots-txt",
-  "lighthouseResult/audits/full-page-screenshot",
-  "lighthouseResult/audits/final-screenshot",
-  "loadingExperience/metrics",
-].join(",");
+// Netlify Pro = 60s max (augmenté).
+// On cible 55s — ~5s de marge pour le runtime Netlify.
+const TIMEOUT_MS = 55000;
 
 // ── Codes d'erreur machine (utilisés par le frontend) ────────
 const ERROR_CODES = {
@@ -210,12 +179,9 @@ async function fetchPageSpeed(url, strategy, attempt = 1) {
   params.append('url', url);
   params.append('strategy', strategy);
   params.append('locale', 'fr');
-  // Performance uniquement — accessibility/best-practices/seo ont des audits
-  // lourds qui rallongent PSI de ~5-8s sur les gros sites.
-  // Les scores accessibility, bestPractices, seo restent disponibles dans
-  // lighthouseResult/categories même sans passer les catégories en paramètre.
-  params.append('category', 'performance');
-  params.append('fields', PSI_FIELDS);
+  ['performance', 'accessibility', 'best-practices', 'seo'].forEach(category => {
+    params.append('category', category);
+  });
   params.append('key', API_KEY);
 
   const controller = new AbortController();
